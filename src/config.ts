@@ -79,7 +79,7 @@ export function getEmailConfig(): EmailConfig {
   const portStr = resolve('SMTP_PORT', smtp.port, '587');
   const user = resolve('SMTP_USER', smtp.user);
   const pass = resolve('SMTP_PASSWORD', smtp.pass);
-  const from = resolve('EMAIL_FROM', smtp.from, 'gladiator@abremail.com');
+  const from = resolve('EMAIL_FROM', smtp.from);
 
   return {
     host,
