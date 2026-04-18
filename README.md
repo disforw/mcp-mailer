@@ -14,7 +14,7 @@ Send an email via the configured SMTP server.
 | `subject` | `string` | ✅ | — | Email subject line |
 | `body` | `string` | ✅ | — | Email body (HTML or plain text) |
 | `html` | `boolean` | | `true` | Send body as HTML. Set `false` for plain text |
-| `from` | `string` | | config default | Sender address override |
+| `from` | `string` | ✅ | config default | Sender address override |
 | `cc` | `string[]` | | — | Optional CC recipients |
 | `reply_to` | `string` | | — | Optional Reply-To address |
 
@@ -50,7 +50,7 @@ Environment variables take precedence over `secrets.json`:
 | `SMTP_PORT` | SMTP server port | `587` |
 | `SMTP_USER` | SMTP authentication username | — |
 | `SMTP_PASSWORD` | SMTP authentication password | — |
-| `EMAIL_FROM` | Default sender address | — |
+| `EMAIL_FROM` | Mail sender address | — |
 | `SMTP_SECURE` | Use TLS on connect (`true`/`false`) | `false` |
 | `SMTP_REJECT_UNAUTHORIZED` | Reject invalid TLS certs (`false` to disable) | `true` |
 | `SMTP_TIMEOUT` | Connection timeout in ms | `10000` |
