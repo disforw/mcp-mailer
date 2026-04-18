@@ -31,11 +31,11 @@ Add an `smtp` block to `~/.openclaw/secrets.json`:
 ```json
 {
   "smtp": {
-    "host": "mail.smtp2go.com",
+    "host": "your-smtp-host",
     "port": 587,
     "user": "your-smtp-user",
     "pass": "your-smtp-password",
-    "from": "sender@example.com"
+    "from": "sender@yourdomain.com"
   }
 }
 ```
@@ -50,7 +50,7 @@ Environment variables take precedence over `secrets.json`:
 | `SMTP_PORT` | SMTP server port | `587` |
 | `SMTP_USER` | SMTP authentication username | — |
 | `SMTP_PASSWORD` | SMTP authentication password | — |
-| `EMAIL_FROM` | Default sender address | `gladiator@abremail.com` |
+| `EMAIL_FROM` | Default sender address | — |
 | `SMTP_SECURE` | Use TLS on connect (`true`/`false`) | `false` |
 | `SMTP_REJECT_UNAUTHORIZED` | Reject invalid TLS certs (`false` to disable) | `true` |
 | `SMTP_TIMEOUT` | Connection timeout in ms | `10000` |
