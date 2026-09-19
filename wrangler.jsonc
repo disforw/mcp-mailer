@@ -8,8 +8,5 @@
       "name": "EMAIL",
       "remote": true
     }
-  ],
-  "vars": {
-    "DEFAULT_FROM": "gladiator@abremail.com"
-  }
+  ]
 }
