@@ -4,6 +4,8 @@
  * Exposes an MCP server over Streamable HTTP at /mcp.
  * Uses Cloudflare Email Service binding (env.EMAIL) to send mail.
  *
+ * Auth: Bearer token via MCP_AUTH_TOKEN secret (set in CF dashboard).
+ *
  * Tools:
  *   send_email  — full-featured email send (HTML/plain, multi-recipient, CC, reply-to)
  *   test_email  — sends a test message to verify the binding works
@@ -16,6 +18,7 @@ import { z } from "zod";
 export interface Env {
   EMAIL: SendEmail;
   DEFAULT_FROM: string;
+  MCP_AUTH_TOKEN: string;
 }
 
 function createServer(env: Env) {
@@ -68,7 +71,6 @@ function createServer(env: Env) {
       try {
         const sender = from ?? env.DEFAULT_FROM;
         const useHtml = html !== false;
-        // Default reply-to to the sender address
         const replyTo = reply_to ?? sender;
 
         const message: Parameters<SendEmail["send"]>[0] = {
@@ -141,6 +143,12 @@ function createServer(env: Env) {
 
 export default {
   fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
+    // Bearer token auth — checked before any routing
+    const auth = request.headers.get("Authorization");
+    if (!env.MCP_AUTH_TOKEN || auth !== `Bearer ${env.MCP_AUTH_TOKEN}`) {
+      return Promise.resolve(new Response("Unauthorized", { status: 401 }));
+    }
+
     const url = new URL(request.url);
 
     if (url.pathname === "/mcp" || url.pathname.startsWith("/mcp/")) {
