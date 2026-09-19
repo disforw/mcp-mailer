@@ -5,6 +5,7 @@
  * Uses Cloudflare Email Service binding (env.EMAIL) to send mail.
  *
  * Auth: Bearer token via MCP_AUTH_TOKEN secret (set in CF dashboard).
+ *       /health is public — safe, returns no sensitive data.
  *
  * Tools:
  *   send_email  — full-featured email send (HTML/plain, multi-recipient, CC, reply-to)
@@ -143,26 +144,27 @@ function createServer(env: Env) {
 
 export default {
   fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
-    // Bearer token auth — checked before any routing
-    const auth = request.headers.get("Authorization");
-    if (!env.MCP_AUTH_TOKEN || auth !== `Bearer ${env.MCP_AUTH_TOKEN}`) {
-      return Promise.resolve(new Response("Unauthorized", { status: 401 }));
-    }
-
     const url = new URL(request.url);
 
-    if (url.pathname === "/mcp" || url.pathname.startsWith("/mcp/")) {
-      return createMcpHandler((_req: Request, e: unknown) =>
-        createServer(e as Env)
-      )(request, env, ctx);
-    }
-
+    // /health is public — no sensitive data exposed
     if (url.pathname === "/health") {
       return Promise.resolve(
         new Response(JSON.stringify({ status: "ok", service: "mcp-mailer" }), {
           headers: { "Content-Type": "application/json" },
         })
       );
+    }
+
+    // All other routes require Bearer token auth
+    const auth = request.headers.get("Authorization");
+    if (!env.MCP_AUTH_TOKEN || auth !== `Bearer ${env.MCP_AUTH_TOKEN}`) {
+      return Promise.resolve(new Response("Unauthorized", { status: 401 }));
+    }
+
+    if (url.pathname === "/mcp" || url.pathname.startsWith("/mcp/")) {
+      return createMcpHandler((_req: Request, e: unknown) =>
+        createServer(e as Env)
+      )(request, env, ctx);
     }
 
     return Promise.resolve(
