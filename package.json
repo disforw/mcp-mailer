@@ -1,0 +1,23 @@
+{
+  "name": "mcp-mailer",
+  "version": "2.0.0",
+  "description": "MCP server for sending email via Cloudflare Email Service — runs as a Cloudflare Worker",
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "cf-typegen": "wrangler types"
+  },
+  "keywords": ["mcp", "email", "cloudflare", "workers"],
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.30.0",
+    "agents": "^0.0.100",
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20240725.0",
+    "typescript": "^5.5.2",
+    "wrangler": "^3.78.0"
+  }
+}

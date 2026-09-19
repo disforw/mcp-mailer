@@ -1,84 +1,75 @@
 # mcp-mailer
 
-A TypeScript MCP (Model Context Protocol) server for sending emails via SMTP.
+MCP server for sending email, built as a Cloudflare Worker using [Cloudflare Email Service](https://developers.cloudflare.com/email-service/).
+
+Exposes a Streamable HTTP MCP endpoint at `/mcp`.
 
 ## Tools
 
 ### `send_email`
 
-Send an email via the configured SMTP server.
+Send an email via Cloudflare Email Service.
 
-| Parameter | Type | Required | Default | Description |
-|-----------|------|----------|---------|-------------|
-| `to` | `string[]` | ✅ | — | One or more recipient email addresses |
-| `subject` | `string` | ✅ | — | Email subject line |
-| `body` | `string` | ✅ | — | Email body (HTML or plain text) |
-| `html` | `boolean` | | `true` | Send body as HTML. Set `false` for plain text |
-| `from` | `string` | ✅ | config default | Sender address override |
-| `cc` | `string[]` | | — | Optional CC recipients |
-| `reply_to` | `string` | | — | Optional Reply-To address |
+| Parameter | Type | Required | Description |
+|---|---|---|---|
+| `to` | `string[]` | ✅ | One or more recipient addresses |
+| `subject` | `string` | ✅ | Email subject line |
+| `body` | `string` | ✅ | Email body (HTML or plain text) |
+| `html` | `boolean` | — | Send as HTML (default: `true`) |
+| `from` | `string` | — | Sender address (defaults to `DEFAULT_FROM`) |
+| `cc` | `string[]` | — | CC recipients |
+| `reply_to` | `string` | — | Reply-To address |
 
 ### `test_email`
 
-Sends a test email to the configured default sender address to verify SMTP connectivity. No parameters required.
-
-## Configuration
-
-### Option 1 — secrets.json (recommended)
-
-Add an `smtp` block to `~/.openclaw/secrets.json`:
-
-```json
-{
-  "smtp": {
-    "host": "your-smtp-host",
-    "port": 587,
-    "user": "your-smtp-user",
-    "pass": "your-smtp-password",
-    "from": "sender@yourdomain.com"
-  }
-}
-```
-
-### Option 2 — Environment variables
-
-Environment variables take precedence over `secrets.json`:
-
-| Variable | Description | Default |
-|----------|-------------|--------|
-| `SMTP_HOST` | SMTP server hostname | — |
-| `SMTP_PORT` | SMTP server port | `587` |
-| `SMTP_USER` | SMTP authentication username | — |
-| `SMTP_PASSWORD` | SMTP authentication password | — |
-| `EMAIL_FROM` | Mail sender address | — |
-| `SMTP_SECURE` | Use TLS on connect (`true`/`false`) | `false` |
-| `SMTP_REJECT_UNAUTHORIZED` | Reject invalid TLS certs (`false` to disable) | `true` |
-| `SMTP_TIMEOUT` | Connection timeout in ms | `10000` |
+Sends a test message to `DEFAULT_FROM` to verify the Email Service binding is working.
 
 ## Setup
 
-```bash
-npm install
-npm run build
-```
+### Prerequisites
 
-## MCP Client Configuration
+- Cloudflare account with [Email Service](https://developers.cloudflare.com/email-service/) enabled and a domain onboarded for sending
+- Node.js 20+
+- Wrangler CLI
 
-Add to your MCP client config (e.g. `~/.cursor/mcp.json` or Claude Desktop config):
+### Configuration
 
-```json
+Edit `wrangler.jsonc` and set your default from address:
+
+```jsonc
 {
-  "mcpServers": {
-    "mcp-mailer": {
-      "command": "node",
-      "args": ["/path/to/mcp-mailer/dist/index.js"]
-    }
+  "vars": {
+    "DEFAULT_FROM": "your-address@yourdomain.com"
   }
 }
 ```
 
-## Security
+Your domain must be onboarded in Cloudflare Email Service → Email Sending before deploying.
 
-- No telemetry or outbound connections beyond the configured SMTP server
-- No credentials are hardcoded — always read from `secrets.json` or environment
-- Secrets file is never logged or exposed via MCP tool responses
+### Local development
+
+```sh
+npm install
+npm run dev
+```
+
+### Deploy
+
+```sh
+npm run deploy
+```
+
+## GitHub Actions auto-deploy
+
+Push to `main` triggers an automatic deploy. Add these secrets to your repository:
+
+- `CLOUDFLARE_API_TOKEN` — API token with Workers:Edit permission
+- `CLOUDFLARE_ACCOUNT_ID` — Your Cloudflare account ID
+
+## MCP endpoint
+
+Once deployed, connect to:
+
+```
+https://mcp-mailer.<your-subdomain>.workers.dev/mcp
+```
