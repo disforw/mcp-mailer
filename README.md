@@ -18,7 +18,7 @@ Send an email via Cloudflare Email Service.
 | `html` | `boolean` | — | Send as HTML (default: `true`) |
 | `from` | `string` | — | Sender address (defaults to `DEFAULT_FROM`) |
 | `cc` | `string[]` | — | CC recipients |
-| `reply_to` | `string` | — | Reply-To address |
+| `reply_to` | `string` | — | Reply-To address (defaults to sender) |
 
 ### `test_email`
 
@@ -34,15 +34,10 @@ Sends a test message to `DEFAULT_FROM` to verify the Email Service binding is wo
 
 ### Configuration
 
-Edit `wrangler.jsonc` and set your default from address:
+Set the following in your Cloudflare Workers dashboard (not in `wrangler.jsonc`):
 
-```jsonc
-{
-  "vars": {
-    "DEFAULT_FROM": "your-address@yourdomain.com"
-  }
-}
-```
+- `DEFAULT_FROM` — env variable, e.g. `gladiator@yourdomain.com`
+- `MCP_AUTH_TOKEN` — secret, used for Bearer token auth on all `/mcp` requests
 
 Your domain must be onboarded in Cloudflare Email Service → Email Sending before deploying.
 
@@ -65,6 +60,16 @@ Push to `main` triggers an automatic deploy. Add these secrets to your repositor
 
 - `CLOUDFLARE_API_TOKEN` — API token with Workers:Edit permission
 - `CLOUDFLARE_ACCOUNT_ID` — Your Cloudflare account ID
+
+## Auth
+
+All requests to `/mcp` require:
+
+```
+Authorization: Bearer <MCP_AUTH_TOKEN>
+```
+
+`/health` is public and returns `{"status":"ok","service":"mcp-mailer"}`.
 
 ## MCP endpoint
 
