@@ -10,6 +10,6 @@
     }
   ],
   "vars": {
-    "DEFAULT_FROM": "noreply@example.com"
+    "DEFAULT_FROM": "gladiator@abremail.com"
   }
 }
