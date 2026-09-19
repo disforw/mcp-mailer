@@ -11,13 +11,13 @@
   "keywords": ["mcp", "email", "cloudflare", "workers"],
   "license": "MIT",
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.30.0",
-    "agents": "^0.24.0",
-    "zod": "^3.22.4"
+    "@modelcontextprotocol/sdk": "latest",
+    "agents": "latest",
+    "zod": "latest"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "^4.20240725.0",
-    "typescript": "^5.5.2",
-    "wrangler": "^3.78.0"
+    "@cloudflare/workers-types": "latest",
+    "typescript": "latest",
+    "wrangler": "latest"
   }
 }
