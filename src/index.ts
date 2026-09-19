@@ -5,7 +5,7 @@
  * Uses Cloudflare Email Service binding (env.EMAIL) to send mail.
  *
  * Tools:
- *   send_email  — full-featured email send
+ *   send_email  — full-featured email send (HTML/plain, multi-recipient, CC, reply-to)
  *   test_email  — sends a test message to verify the binding works
  */
 
@@ -59,21 +59,25 @@ function createServer(env: Env) {
           .string()
           .email()
           .optional()
-          .describe("Optional Reply-To address."),
+          .describe(
+            "Reply-To address. Defaults to the sender (from) address if not specified."
+          ),
       },
     },
     async ({ to, subject, body, html, from, cc, reply_to }) => {
       try {
         const sender = from ?? env.DEFAULT_FROM;
         const useHtml = html !== false;
+        // Default reply-to to the sender address
+        const replyTo = reply_to ?? sender;
 
         const message: Parameters<SendEmail["send"]>[0] = {
           from: sender,
           to: to.join(", "),
           subject,
+          replyTo,
           ...(useHtml ? { html: body } : { text: body }),
           ...(cc && cc.length > 0 ? { cc: cc.join(", ") } : {}),
-          ...(reply_to ? { replyTo: reply_to } : {}),
         };
 
         const response = await env.EMAIL.send(message);
@@ -109,6 +113,7 @@ function createServer(env: Env) {
         const response = await env.EMAIL.send({
           from: env.DEFAULT_FROM,
           to: env.DEFAULT_FROM,
+          replyTo: env.DEFAULT_FROM,
           subject: "[mcp-mailer] Email Service connectivity test",
           html: "<p>This is an automated test message from <strong>mcp-mailer</strong>.</p><p>If you received this, Cloudflare Email Service is working correctly.</p>",
         });
