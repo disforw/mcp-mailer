@@ -31,18 +31,19 @@ export default {
     server.registerTool(
       "send_email",
       {
-        description: "Send an email via Cloudflare Email Service.",
+        description: "Send an email. Supports plain text or HTML body, multiple recipients, CC, BCC, and a custom reply-to address.",
         inputSchema: {
-          to: z.array(z.string().email()).min(1).describe("One or more recipient email addresses."),
-          subject: z.string().min(1).describe("Email subject."),
-          body: z.string().min(1).describe("Email body — plain text or HTML."),
-          html: z.boolean().optional().default(false).describe("Set true to send body as HTML. Defaults to plain text."),
+          to: z.array(z.string().email()).min(1).describe("One or more recipient addresses."),
+          subject: z.string().min(1).describe("Email subject line."),
+          body: z.string().min(1).describe("Email body. Plain text by default; set html=true for HTML."),
+          html: z.boolean().optional().default(false).describe("Send body as HTML. Defaults to false (plain text)."),
           from: z.string().email().optional().describe(`Sender address. Defaults to ${DEFAULT_FROM}.`),
-          cc: z.array(z.string().email()).optional().describe("Optional CC recipients."),
-          reply_to: z.string().email().optional().describe("Reply-To address. Defaults to sender."),
+          reply_to: z.string().email().optional().describe("Reply-To address. Defaults to the sender."),
+          cc: z.array(z.string().email()).optional().describe("CC recipients."),
+          bcc: z.array(z.string().email()).optional().describe("BCC recipients."),
         },
       },
-      async ({ to, subject, body, html, from, cc, reply_to }) => {
+      async ({ to, subject, body, html, from, reply_to, cc, bcc }) => {
         try {
           const sender = from ?? DEFAULT_FROM;
           const result = await env.EMAIL.send({
@@ -52,6 +53,7 @@ export default {
             replyTo: reply_to ?? sender,
             ...(html ? { html: body } : { text: body }),
             ...(cc && cc.length > 0 ? { cc: cc.join(", ") } : {}),
+            ...(bcc && bcc.length > 0 ? { bcc: bcc.join(", ") } : {}),
           });
           return {
             content: [{ type: "text" as const, text: `Sent! Message ID: ${result.messageId}` }],
