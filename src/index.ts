@@ -15,6 +15,15 @@ const attachmentSchema = z.object({
   mime_type: z.string().describe("MIME type, e.g. application/pdf, image/png."),
 });
 
+function base64ToArrayBuffer(base64: string): ArrayBuffer {
+  const binary = atob(base64);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) {
+    bytes[i] = binary.charCodeAt(i);
+  }
+  return bytes.buffer;
+}
+
 export default {
   fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
     const url = new URL(request.url);
@@ -61,7 +70,7 @@ export default {
               ? {
                   attachments: attachments.map((a) => ({
                     filename: a.filename,
-                    content: a.content_base64,
+                    content: base64ToArrayBuffer(a.content_base64),
                     type: a.mime_type,
                     disposition: "attachment" as const,
                   })),
