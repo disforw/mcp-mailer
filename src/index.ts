@@ -3,6 +3,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 
 const DEFAULT_FROM = "gladiator@abremail.com";
+const DEFAULT_FROM_NAME = "Gladiator";
 
 export interface Env {
   EMAIL: SendEmail;
@@ -31,26 +32,32 @@ export default {
     server.registerTool(
       "send_email",
       {
-        description: "Send an email. Supports plain text or HTML body, multiple recipients, CC, BCC, and a custom reply-to address.",
+        description: [
+          "Send an email to one or more recipients.",
+          `Defaults: from=${DEFAULT_FROM}, from_name=${DEFAULT_FROM_NAME}, plain text body.`,
+          "Supports: multiple To recipients, CC, BCC, Reply-To, HTML body, and a custom sender display name.",
+        ].join(" "),
         inputSchema: {
           to: z.array(z.string().email()).min(1).describe("One or more recipient addresses."),
           subject: z.string().min(1).describe("Email subject line."),
-          body: z.string().min(1).describe("Email body. Plain text by default; set html=true for HTML."),
-          html: z.boolean().optional().default(false).describe("Send body as HTML. Defaults to false (plain text)."),
-          from: z.string().email().optional().describe(`Sender address. Defaults to ${DEFAULT_FROM}.`),
+          body: z.string().min(1).describe("Email body. Plain text by default; set html=true to send HTML."),
+          html: z.boolean().optional().default(false).describe("Send body as HTML. Defaults to false."),
+          from: z.string().email().optional().describe(`Sender email address. Defaults to ${DEFAULT_FROM}.`),
+          from_name: z.string().optional().describe(`Sender display name shown in email clients. Defaults to ${DEFAULT_FROM_NAME}.`),
           reply_to: z.string().email().optional().describe("Reply-To address. Defaults to the sender."),
           cc: z.array(z.string().email()).optional().describe("CC recipients."),
           bcc: z.array(z.string().email()).optional().describe("BCC recipients."),
         },
       },
-      async ({ to, subject, body, html, from, reply_to, cc, bcc }) => {
+      async ({ to, subject, body, html, from, from_name, reply_to, cc, bcc }) => {
         try {
-          const sender = from ?? DEFAULT_FROM;
+          const senderEmail = from ?? DEFAULT_FROM;
+          const senderName = from_name ?? DEFAULT_FROM_NAME;
           const result = await env.EMAIL.send({
-            from: sender,
+            from: { email: senderEmail, name: senderName },
             to: to.join(", "),
             subject,
-            replyTo: reply_to ?? sender,
+            replyTo: reply_to ?? senderEmail,
             ...(html ? { html: body } : { text: body }),
             ...(cc && cc.length > 0 ? { cc: cc.join(", ") } : {}),
             ...(bcc && bcc.length > 0 ? { bcc: bcc.join(", ") } : {}),
