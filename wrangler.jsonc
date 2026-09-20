@@ -3,12 +3,10 @@
   "main": "src/index.ts",
   "compatibility_date": "2024-11-01",
   "compatibility_flags": ["nodejs_compat"],
-  "vars": {
-    "DEFAULT_FROM": "gladiator@abremail.com"
-  },
   "send_email": [
     {
-      "name": "EMAIL"
+      "name": "EMAIL",
+      "remote": true
     }
   ]
 }
