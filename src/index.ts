@@ -9,6 +9,12 @@ export interface Env {
   TOKVAR: string;
 }
 
+const attachmentSchema = z.object({
+  filename: z.string().describe("Filename including extension."),
+  content_base64: z.string().describe("Base64-encoded file content."),
+  mime_type: z.string().describe("MIME type, e.g. application/pdf, image/png."),
+});
+
 export default {
   fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
     const url = new URL(request.url);
@@ -31,7 +37,7 @@ export default {
     server.registerTool(
       "send_email",
       {
-        description: `Send an email. Required: to (array), subject, body. Optional: from (default: ${DEFAULT_FROM}), from_name, html (bool, default false).`,
+        description: `Send an email. Required: to (array), subject, body. Optional: from (default: ${DEFAULT_FROM}), from_name, html (bool, default false), attachments (array of {filename, content_base64, mime_type}, 5 MB total limit).`,
         inputSchema: {
           to: z.array(z.string().email()).min(1).describe("Recipient addresses."),
           subject: z.string().min(1).describe("Subject line."),
@@ -39,9 +45,10 @@ export default {
           html: z.boolean().optional().default(false).describe("Send as HTML. Default: false."),
           from: z.string().email().optional().describe(`Sender address. Default: ${DEFAULT_FROM}.`),
           from_name: z.string().optional().describe("Sender display name."),
+          attachments: z.array(attachmentSchema).optional().describe("File attachments."),
         },
       },
-      async ({ to, subject, body, html, from, from_name }) => {
+      async ({ to, subject, body, html, from, from_name, attachments }) => {
         try {
           const senderEmail = from ?? DEFAULT_FROM;
           const result = await env.EMAIL.send({
@@ -50,6 +57,16 @@ export default {
             subject,
             replyTo: senderEmail,
             ...(html ? { html: body } : { text: body }),
+            ...(attachments && attachments.length > 0
+              ? {
+                  attachments: attachments.map((a) => ({
+                    filename: a.filename,
+                    content: a.content_base64,
+                    type: a.mime_type,
+                    disposition: "attachment" as const,
+                  })),
+                }
+              : {}),
           });
           return {
             content: [{ type: "text" as const, text: `Sent! Message ID: ${result.messageId}` }],
