@@ -16,9 +16,10 @@ import { createMcpHandler } from "agents/mcp/server";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 
+const DEFAULT_FROM = "gladiator@abremail.com";
+
 export interface Env {
   EMAIL: SendEmail;
-  DEFAULT_FROM: string;
   MCP_AUTH_TOKEN: string;
 }
 
@@ -53,7 +54,7 @@ function createServer(env: Env) {
           .email()
           .optional()
           .describe(
-            "Sender address. Defaults to the configured DEFAULT_FROM. Override when sending on behalf of a specific address."
+            `Sender address. Defaults to ${DEFAULT_FROM}. Override when sending on behalf of a specific address.`
           ),
         cc: z
           .array(z.string().email())
@@ -70,7 +71,7 @@ function createServer(env: Env) {
     },
     async ({ to, subject, body, html, from, cc, reply_to }) => {
       try {
-        const sender = from ?? env.DEFAULT_FROM;
+        const sender = from ?? DEFAULT_FROM;
         const useHtml = html !== false;
         const replyTo = reply_to ?? sender;
 
@@ -108,15 +109,15 @@ function createServer(env: Env) {
     "test_email",
     {
       description:
-        "Send a test email to verify the Cloudflare Email Service binding is working. Sends to the DEFAULT_FROM address.",
+        `Send a test email to verify the Cloudflare Email Service binding is working. Sends to ${DEFAULT_FROM}.`,
       inputSchema: {},
     },
     async () => {
       try {
         const response = await env.EMAIL.send({
-          from: env.DEFAULT_FROM,
-          to: env.DEFAULT_FROM,
-          replyTo: env.DEFAULT_FROM,
+          from: DEFAULT_FROM,
+          to: DEFAULT_FROM,
+          replyTo: DEFAULT_FROM,
           subject: "[mcp-mailer] Email Service connectivity test",
           html: "<p>This is an automated test message from <strong>mcp-mailer</strong>.</p><p>If you received this, Cloudflare Email Service is working correctly.</p>",
         });
