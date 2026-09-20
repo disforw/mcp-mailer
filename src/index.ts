@@ -6,7 +6,7 @@ const DEFAULT_FROM = "gladiator@abremail.com";
 
 export interface Env {
   EMAIL: SendEmail;
-  MCP_AUTH_TOKEN: string;
+  MCP_AUTH_TOKEN: ***
 }
 
 export default {
@@ -33,21 +33,25 @@ export default {
       {
         description: "Send an email via Cloudflare Email Service.",
         inputSchema: {
-          to: z.string().email().describe("Recipient email address."),
+          to: z.array(z.string().email()).min(1).describe("One or more recipient email addresses."),
           subject: z.string().min(1).describe("Email subject."),
-          body: z.string().min(1).describe("Email body (plain text)."),
+          body: z.string().min(1).describe("Email body — plain text or HTML."),
+          html: z.boolean().optional().default(false).describe("Set true to send body as HTML. Defaults to plain text."),
           from: z.string().email().optional().describe(`Sender address. Defaults to ${DEFAULT_FROM}.`),
+          cc: z.array(z.string().email()).optional().describe("Optional CC recipients."),
+          reply_to: z.string().email().optional().describe("Reply-To address. Defaults to sender."),
         },
       },
-      async ({ to, subject, body, from }) => {
+      async ({ to, subject, body, html, from, cc, reply_to }) => {
         try {
           const sender = from ?? DEFAULT_FROM;
           const result = await env.EMAIL.send({
             from: sender,
-            to,
+            to: to.join(", "),
             subject,
-            text: body,
-            replyTo: sender,
+            replyTo: reply_to ?? sender,
+            ...(html ? { html: body } : { text: body }),
+            ...(cc && cc.length > 0 ? { cc: cc.join(", ") } : {}),
           });
           return {
             content: [{ type: "text" as const, text: `Sent! Message ID: ${result.messageId}` }],
