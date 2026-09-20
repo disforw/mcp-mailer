@@ -46,13 +46,13 @@ export default {
     server.registerTool(
       "send_email",
       {
-        description: `Send an email. Required: to (array), subject, body. Optional: from (default: configured sender), from_name, html (bool, default false), attachments (array of {filename, content_base64, mime_type}, 5 MB total limit).`,
+        description: `Send an email. Required: to (array), subject, body. Optional: from (default: ${defaultFrom}), from_name, html (bool, default false), attachments (array of {filename, content_base64, mime_type}, 5 MB total limit).`,
         inputSchema: {
           to: z.array(z.string().email()).min(1).describe("Recipient addresses."),
           subject: z.string().min(1).describe("Subject line."),
           body: z.string().min(1).describe("Email body."),
           html: z.boolean().optional().default(false).describe("Send as HTML. Default: false."),
-          from: z.string().email().optional().describe("Sender address. Defaults to configured sender."),
+          from: z.string().email().optional().describe(`Sender address. Default: ${defaultFrom}.`),
           from_name: z.string().optional().describe("Sender display name."),
           attachments: z.array(attachmentSchema).optional().describe("File attachments."),
         },
