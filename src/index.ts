@@ -2,11 +2,10 @@ import { createMcpHandler } from "agents/mcp/server";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 
-const DEFAULT_FROM = "gladiator@abremail.com";
-
 export interface Env {
   EMAIL: SendEmail;
   TOKVAR: string;
+  DEFAULT_FROM: string;
 }
 
 const attachmentSchema = z.object({
@@ -41,28 +40,29 @@ export default {
       return Promise.resolve(new Response("Unauthorized", { status: 401 }));
     }
 
+    const defaultFrom = env.DEFAULT_FROM;
     const server = new McpServer({ name: "mcp-mailer", version: "1.0.0" });
 
     server.registerTool(
       "send_email",
       {
-        description: `Send an email. Required: to (array), subject, body. Optional: from (default: ${DEFAULT_FROM}), from_name, html (bool, default false), attachments (array of {filename, content_base64, mime_type}, 5 MB total limit).`,
+        description: `Send an email. Required: to (array), subject, body. Optional: from (default: configured sender), from_name, html (bool, default false), attachments (array of {filename, content_base64, mime_type}, 5 MB total limit).`,
         inputSchema: {
           to: z.array(z.string().email()).min(1).describe("Recipient addresses."),
           subject: z.string().min(1).describe("Subject line."),
           body: z.string().min(1).describe("Email body."),
           html: z.boolean().optional().default(false).describe("Send as HTML. Default: false."),
-          from: z.string().email().optional().describe(`Sender address. Default: ${DEFAULT_FROM}.`),
+          from: z.string().email().optional().describe("Sender address. Defaults to configured sender."),
           from_name: z.string().optional().describe("Sender display name."),
           attachments: z.array(attachmentSchema).optional().describe("File attachments."),
         },
       },
       async ({ to, subject, body, html, from, from_name, attachments }) => {
         try {
-          const senderEmail = from ?? DEFAULT_FROM;
+          const senderEmail = from ?? defaultFrom;
           const result = await env.EMAIL.send({
             from: from_name ? { email: senderEmail, name: from_name } : senderEmail,
-            to: to.join(", "),
+            to,
             subject,
             replyTo: senderEmail,
             ...(html ? { html: body } : { text: body }),
@@ -90,8 +90,6 @@ export default {
       }
     );
 
-    return createMcpHandler((_req: Request, e: unknown) =>
-      server
-    )(request, env, ctx);
+    return createMcpHandler(() => server)(request, env, ctx);
   },
 } satisfies ExportedHandler<Env>;
