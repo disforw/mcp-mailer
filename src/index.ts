@@ -7,7 +7,7 @@ const DEFAULT_FROM_NAME = "Gladiator";
 
 export interface Env {
   EMAIL: SendEmail;
-  MCP_AUTH_TOKEN: ***
+  AUTH_TOKEN: string;
 }
 
 export default {
@@ -23,7 +23,7 @@ export default {
     }
 
     const auth = request.headers.get("Authorization");
-    if (!env.MCP_AUTH_TOKEN || auth !== `Bearer ${env.MCP_AUTH_TOKEN}`) {
+    if (!env.AUTH_TOKEN || auth !== `Bearer ${env.AUTH_TOKEN}`) {
       return Promise.resolve(new Response("Unauthorized", { status: 401 }));
     }
 
