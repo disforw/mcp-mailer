@@ -6,7 +6,7 @@ const DEFAULT_FROM = "gladiator@abremail.com";
 
 export interface Env {
   EMAIL: SendEmail;
-  AUTH_TOKEN: ***
+  TOKVAR: string;
 }
 
 export default {
@@ -22,7 +22,7 @@ export default {
     }
 
     const auth = request.headers.get("Authorization");
-    if (!env.AUTH_TOKEN || auth !== `Bearer ${env.AUTH_TOKEN}`) {
+    if (!env.TOKVAR || auth !== `Bearer ${env.TOKVAR}`) {
       return Promise.resolve(new Response("Unauthorized", { status: 401 }));
     }
 
