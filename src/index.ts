@@ -31,29 +31,24 @@ export default {
     server.registerTool(
       "send_email",
       {
-        description: [
-          "Send an email to one or more recipients.",
-          `Default sender: ${DEFAULT_FROM}.`,
-          "Supports: multiple To recipients, Reply-To, HTML body, and a custom sender address and display name.",
-        ].join(" "),
+        description: `Send an email. Required: to (array), subject, body. Optional: from (default: ${DEFAULT_FROM}), from_name, html (bool, default false).`,
         inputSchema: {
-          to: z.array(z.string().email()).min(1).describe("One or more recipient addresses."),
-          subject: z.string().min(1).describe("Email subject line."),
-          body: z.string().min(1).describe("Email body. Plain text by default; set html=true to send HTML."),
-          html: z.boolean().optional().default(false).describe("Send body as HTML. Defaults to false."),
-          from: z.string().email().optional().describe(`Sender email address. Defaults to ${DEFAULT_FROM}.`),
-          from_name: z.string().optional().describe("Sender display name shown in email clients."),
-          reply_to: z.string().email().optional().describe("Reply-To address. Defaults to the sender."),
+          to: z.array(z.string().email()).min(1).describe("Recipient addresses."),
+          subject: z.string().min(1).describe("Subject line."),
+          body: z.string().min(1).describe("Email body."),
+          html: z.boolean().optional().default(false).describe("Send as HTML. Default: false."),
+          from: z.string().email().optional().describe(`Sender address. Default: ${DEFAULT_FROM}.`),
+          from_name: z.string().optional().describe("Sender display name."),
         },
       },
-      async ({ to, subject, body, html, from, from_name, reply_to }) => {
+      async ({ to, subject, body, html, from, from_name }) => {
         try {
           const senderEmail = from ?? DEFAULT_FROM;
           const result = await env.EMAIL.send({
             from: from_name ? { email: senderEmail, name: from_name } : senderEmail,
             to: to.join(", "),
             subject,
-            replyTo: reply_to ?? senderEmail,
+            replyTo: senderEmail,
             ...(html ? { html: body } : { text: body }),
           });
           return {
